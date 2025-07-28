@@ -44,6 +44,10 @@ NutriGuide is a mobile application that empowers individuals to manage their nut
 <img src="images/10.png" alt="Welcome" width="500" height="800"/>
 <img src="images/11.png" alt="Welcome" width="500" height="800"/>
 <img src="images/12.png" alt="Welcome" width="500" height="800"/>
+<img src="images/13.png" alt="Welcome" width="500" height="800"/>
+<img src="images/14.png" alt="Welcome" width="500" height="800"/>
+<img src="images/15.png" alt="Welcome" width="500" height="800"/>
+<img src="images/16.png" alt="Welcome" width="500" height="800"/>
 
 
 ## 🏗️ Architecture Overview
