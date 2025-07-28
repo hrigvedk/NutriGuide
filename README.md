@@ -40,6 +40,8 @@ NutriGuide is a mobile application that empowers individuals to manage their nut
 
 ## 🏗️ Architecture Overview
 
+<img src="images/arch.jpeg" alt="Architecture" width="600"/>
+
 ### Mobile App
 - Built with **SwiftUI** (iOS)
 - Acts as the central hub for barcode scanning, profile management, and data sync
