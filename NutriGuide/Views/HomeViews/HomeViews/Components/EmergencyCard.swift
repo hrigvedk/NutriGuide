@@ -1,0 +1,255 @@
+//
+//  EmergencyCard.swift
+//  NutriGuide
+//
+//  Created by Hrigved Khatavkar on 4/6/25.
+//
+import SwiftUI
+import Firebase
+import WatchConnectivity
+
+class EmergencyCardModel: NSObject, ObservableObject, WCSessionDelegate {
+    @Published var isGenerating = false
+    @Published var cardImage: UIImage?
+    @Published var syncStatus: WatchSyncStatus = .notSynced
+    
+    private var session: WCSession?
+    private var userData: [String: Any]?
+    
+    override init() {
+        super.init()
+        
+        if WCSession.isSupported() {
+            self.session = WCSession.default
+            self.session?.delegate = self
+            self.session?.activate()
+        }
+    }
+    
+    func generateEmergencyCard(userData: [String: Any], userName: String) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 1000, height: 640))
+        
+        let image = renderer.image { ctx in
+            UIColor.systemBackground.setFill()
+            ctx.fill(CGRect(x: 0, y: 0, width: 1000, height: 640))
+            
+            UIColor.red.setStroke()
+            let path = UIBezierPath(roundedRect: CGRect(x: 10, y: 10, width: 980, height: 620), cornerRadius: 16)
+            path.lineWidth = 8
+            path.stroke()
+            
+            let headerAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 36, weight: .bold),
+                .foregroundColor: UIColor.red
+            ]
+            
+            let emergencySymbol = "⚠️ EMERGENCY HEALTH CARD ⚠️"
+            emergencySymbol.draw(at: CGPoint(x: 40, y: 40), withAttributes: headerAttributes)
+            
+            let titleAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 24, weight: .semibold),
+                .foregroundColor: UIColor.secondaryLabel
+            ]
+            
+            let valueAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 28, weight: .medium),
+                .foregroundColor: UIColor.label
+            ]
+            
+            let detailAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 20, weight: .regular),
+                .foregroundColor: UIColor.label
+            ]
+            
+            "Name:".draw(at: CGPoint(x: 40, y: 120), withAttributes: titleAttributes)
+            userName.draw(at: CGPoint(x: 40, y: 150), withAttributes: valueAttributes)
+            
+            "Health Conditions:".draw(at: CGPoint(x: 40, y: 210), withAttributes: titleAttributes)
+            let healthConditions = userData["healthConditions"] as? [String] ?? []
+            let conditionsText = healthConditions.isEmpty ? "None reported" : healthConditions.joined(separator: ", ")
+            drawWrappedText(text: conditionsText, x: 40, y: 240, width: 550, attributes: detailAttributes)
+            
+            "Allergies:".draw(at: CGPoint(x: 40, y: 310), withAttributes: titleAttributes)
+            let allergens = userData["allergens"] as? [String] ?? []
+            let allergiesText = allergens.isEmpty ? "None reported" : allergens.joined(separator: ", ")
+            drawWrappedText(text: allergiesText, x: 40, y: 340, width: 550, attributes: detailAttributes)
+            
+            "Medications:".draw(at: CGPoint(x: 40, y: 410), withAttributes: titleAttributes)
+            var medicationsText = "None reported"
+            if let medicationsArray = userData["medications"] as? [[String: Any]], !medicationsArray.isEmpty {
+                let medicationNames = medicationsArray.compactMap { $0["name"] as? String }
+                if !medicationNames.isEmpty {
+                    medicationsText = medicationNames.joined(separator: ", ")
+                }
+            }
+            drawWrappedText(text: medicationsText, x: 40, y: 440, width: 550, attributes: detailAttributes)
+
+            "Emergency Contact:".draw(at: CGPoint(x: 40, y: 510), withAttributes: titleAttributes)
+            var emergencyContactText = "None provided"
+            if let emergencyContact = userData["emergencyContact"] as? [String: Any],
+               let name = emergencyContact["name"] as? String,
+               let phone = emergencyContact["phone"] as? String,
+               let relationship = emergencyContact["relationship"] as? String,
+               !name.isEmpty {
+                emergencyContactText = "\(name) (\(relationship)): \(phone)"
+            }
+            drawWrappedText(text: emergencyContactText, x: 40, y: 540, width: 550, attributes: detailAttributes)
+            
+            let appInfoAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 16, weight: .regular),
+                .foregroundColor: UIColor.tertiaryLabel
+            ]
+            
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .medium
+            
+            "Generated by NutriGuide Health App".draw(
+                at: CGPoint(x: 40, y: 590),
+                withAttributes: appInfoAttributes
+            )
+            
+            "Date: \(dateFormatter.string(from: Date()))".draw(
+                at: CGPoint(x: 680, y: 590),
+                withAttributes: appInfoAttributes
+            )
+        }
+        
+        return image
+    }
+    
+    func  syncWithAppleWatch(userData: [String: Any], userName: String) {
+        self.userData = userData
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let session = self.session else {
+                self?.syncStatus = .notAvailable
+                return
+            }
+            
+            if session.activationState != .activated {
+                self.syncStatus = .syncing
+                return
+            }
+            
+            if !session.isPaired || !session.isWatchAppInstalled {
+                self.syncStatus = .notAvailable
+                return
+            }
+            
+            self.syncStatus = .syncing
+            
+            var emergencyData: [String: Any] = [
+                "name": userName,
+                "timestamp": Date().timeIntervalSince1970
+            ]
+            
+            if let healthConditions = userData["healthConditions"] as? [String] {
+                emergencyData["healthConditions"] = healthConditions
+            }
+            
+            if let emergencyContact = userData["emergencyContact"] as? [String: Any] {
+                if let name = emergencyContact["name"] as? String {
+                    emergencyData["emergencyContactName"] = name
+                }
+                
+                if let relationship = emergencyContact["relationship"] as? String {
+                    emergencyData["emergencyContactRelationship"] = relationship
+                }
+                
+                if let phone = emergencyContact["phone"] as? String {
+                    emergencyData["emergencyContactPhone"] = phone
+                }
+            }
+            
+            if let medications = userData["medications"] as? [[String: Any]] {
+                emergencyData["medications"] = medications
+            }
+            
+            if let allergens = userData["allergens"] as? [String] {
+                emergencyData["allergens"] = allergens
+            }
+            
+            print("SyncWithAppleWatch: \(emergencyData)")
+            
+            session.transferUserInfo(emergencyData)
+            
+            if session.isReachable {
+                session.sendMessage(["command": "update_emergency_info"], replyHandler: { reply in
+                    DispatchQueue.main.async {
+                        if let success = reply["success"] as? Bool, success {
+                            self.syncStatus = .synced
+                        }
+                    }
+                }, errorHandler: { error in
+                    print("Error sending message to watch: \(error.localizedDescription)")
+                })
+            }
+        }
+    }
+    
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        DispatchQueue.main.async {
+            if activationState == .activated {
+                if self.syncStatus == .syncing, let userData = self.userData {
+                    self.syncWithAppleWatch(userData: userData, userName: "User")
+                }
+            } else if let error = error {
+                print("WCSession activation failed with error: \(error.localizedDescription)")
+                self.syncStatus = .notAvailable
+            }
+        }
+    }
+    
+    func sessionDidBecomeInactive(_ session: WCSession) {
+        DispatchQueue.main.async {
+            if self.syncStatus == .syncing {
+                self.syncStatus = .notSynced
+            }
+        }
+    }
+    
+    func sessionDidDeactivate(_ session: WCSession) {
+        DispatchQueue.main.async {
+            self.syncStatus = .notSynced
+        }
+        
+        WCSession.default.activate()
+    }
+    
+    func session(_ session: WCSession, didFinish userInfoTransfer: WCSessionUserInfoTransfer, error: Error?) {
+        DispatchQueue.main.async {
+            if error == nil {
+                self.syncStatus = .synced
+            } else {
+                print("Error transferring user info: \(error?.localizedDescription ?? "Unknown error")")
+                self.syncStatus = .notSynced
+            }
+        }
+    }
+    
+    private func drawWrappedText(text: String, x: CGFloat, y: CGFloat, width: CGFloat, attributes: [NSAttributedString.Key: Any]) {
+        let attributedString = NSAttributedString(string: text, attributes: attributes)
+        let textRect = CGRect(x: x, y: y, width: width, height: 200)
+        attributedString.draw(in: textRect)
+    }
+}
+
+enum WatchSyncStatus {
+    case notSynced
+    case syncing
+    case synced
+    case notAvailable
+    
+    var description: String {
+        switch self {
+        case .notSynced:
+            return "Not synced with Apple Watch"
+        case .syncing:
+            return "Syncing with Apple Watch..."
+        case .synced:
+            return "Successfully synced with Apple Watch"
+        case .notAvailable:
+            return "Apple Watch not available"
+        }
+    }
+}
