@@ -32,14 +32,19 @@ NutriGuide is a mobile application that empowers individuals to manage their nut
 
 ## 📱 Screenshots
 
-- Welcome, Signup, and Login screens (light/dark mode)
-- <img src="images/1.png" alt="Welcome" width="200" height="600"/>
-- <img src="images/2.png" alt="Welcome" width="500" height="800"/>
-- <img src="images/3.png" alt="Welcome" width="500" height="800"/>
-- Onboarding and Home pages
-- Health Reports and Emergency Card
-- Barcode Scanning & Nutrition Analysis
-- Food Diary and Nutrition Dashboard
+<img src="images/1.png" alt="Welcome" width="200" height="600"/>
+<img src="images/2.png" alt="Welcome" width="500" height="800"/>
+<img src="images/3.png" alt="Welcome" width="500" height="800"/>
+<img src="images/4.png" alt="Welcome" width="500" height="800"/>
+<img src="images/5.png" alt="Welcome" width="500" height="800"/>
+<img src="images/6.png" alt="Welcome" width="500" height="800"/>
+<img src="images/7.png" alt="Welcome" width="500" height="800"/>
+<img src="images/8.png" alt="Welcome" width="500" height="800"/>
+<img src="images/9.png" alt="Welcome" width="500" height="800"/>
+<img src="images/10.png" alt="Welcome" width="500" height="800"/>
+<img src="images/11.png" alt="Welcome" width="500" height="800"/>
+<img src="images/12.png" alt="Welcome" width="500" height="800"/>
+
 
 ## 🏗️ Architecture Overview
 
