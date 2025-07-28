@@ -34,8 +34,8 @@ NutriGuide is a mobile application that empowers individuals to manage their nut
 
 - Welcome, Signup, and Login screens (light/dark mode)
 - <img src="images/1.png" alt="Welcome" width="200" height="600"/>
-- <img src="images/2.png" alt="Welcome" width="200" height="600"/>
-- <img src="images/3.png" alt="Welcome" width="200" height="600"/>
+- <img src="images/2.png" alt="Welcome" width="400" height="600"/>
+- <img src="images/3.png" alt="Welcome" width="400" height="600"/>
 - Onboarding and Home pages
 - Health Reports and Emergency Card
 - Barcode Scanning & Nutrition Analysis
