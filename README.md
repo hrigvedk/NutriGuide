@@ -1,6 +1,6 @@
 # NutriGuide: Personalized Nutrition & Allergen Management
 
-![NutriGuide logo](images/logo.png)
+<img src="images/logo.png" alt="NutriGuide logo" width="200"/>
 
 NutriGuide is a mobile application that empowers individuals to manage their nutrition with precision, especially when navigating allergies, dietary restrictions, and chronic health conditions. Unlike traditional food-tracking apps, NutriGuide provides **personalized recommendations** using user-specific health data and AI-powered analysis.
 
